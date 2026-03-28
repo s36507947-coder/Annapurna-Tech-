@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annapurna AI - Agricultural Expert Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for chat box and agriculture colors */
+        .chat-container {
+            height: 70vh;
+            overflow-y: auto;
+        }
+        .bg-agriculture {
+            background-color: #2d5a27; /* Dark Green */
+        }
+        .text-agriculture {
+            color: #2d5a27;
+        }
+        .border-agriculture {
+            border-color: #2d5a27;
+        }
+        /* Style for user and AI messages */
+        .message {
+            max-width: 80%;
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+        }
+        .message-user {
+            background-color: #38a169; /* Lighter green */
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .message-ai {
+            background-color: #f1f3f4;
+            color: black;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+        /* Hide scrollbar */
+        .chat-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: rgba(45, 90, 39, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="max-w-md mx-auto mt-10 bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200">
+        <div class="bg-agriculture text-white p-5 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">Annapurna AI <span class="text-xl">🌾</span></h1>
+                <p class="text-xs text-green-100 mt-1">Apnar Krisho-Kosh, 24/7</p>
+            </div>
+        </div>
+
+        <div id="chat-box" class="chat-container p-6 flex flex-col space-y-2 bg-gray-50 border-t border-b border-gray-100">
+            <div class="message message-ai">
+                <p class="text-sm font-semibold text-agriculture">Annapurna AI</p>
+                <p class="text-base mt-1">Nomoshkar! Ami Annapurna AI Agricultural Expert. Ami apnake kivabe shahajjo korte pari?</p>
+            </div>
+        </div>
+
+        <div class="p-4 bg-white border-t border-gray-200 flex items-center gap-3">
+            <input type="text" id="user-input" placeholder="Chaser somossya ba prosno likhun..." class="flex-1 border rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 border-gray-300">
+            <button onclick="sendMessage()" class="bg-green-600 text-white px-6 py-3 rounded-full hover:bg-green-700 transition duration-300">Pathan</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+
+        /**
+         * Adds a message bubble to the chat interface.
+         * @param {string} sender - 'user' or 'ai'
+         * @param {string} text - Message text
+         */
+        function addMessageBubble(sender, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message message-${sender}`;
+            
+            if (sender === 'ai') {
+                const senderName = document.createElement('p');
+                senderName.className = 'text-sm font-semibold text-agriculture';
+                senderName.innerText = 'Annapurna AI';
+                messageDiv.appendChild(senderName);
+            }
+
+            const messageText = document.createElement('p');
+            messageText.className = 'text-base mt-1';
+            messageText.innerText = text;
+            messageDiv.appendChild(messageText);
+            
+            chatBox.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        /**
+         * Scrolls the chat box to the very bottom.
+                 */
+        function scrollToBottom() {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        /**
+         * Handles sending the user message to the backend.
+         */
+        async function sendMessage() {
+            const message = userInput.value.trim();
+
+            if (!message) return; // Don't send empty messages
+
+            // 1. Display user message immediately
+            addMessageBubble('user', message);
+            userInput.value = '';
+
+            // 2. Add a temporary "typing..." message from AI
+            const typingBubble = document.createElement('div');
+            typingBubble.id = 'typing-indicator';
+            typingBubble.className = 'message message-ai';
+            const typingText = document.createElement('p');
+            typingText.className = 'text-base italic text-gray-500';
+            typingText.innerText = 'Bhabchhi...';
+            typingBubble.appendChild(typingText);
+            chatBox.appendChild(typingBubble);
+            scrollToBottom();
+
+            try {
+                // 3. Make the asynchronous API call to the Flask backend
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // 4. Remove typing indicator and add the actual AI response
+                    document.getElementById('typing-indicator').remove();
+                    addMessageBubble('ai', data.reply);
+                } else {
+                    document.getElementById('typing-indicator').remove();
+                    addMessageBubble('ai', "Error contacting backend.");
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('typing-indicator').remove();
+                addMessageBubble('ai', "Sorry, I can't connect right now. Please check your internet connection.");
+            }
+        }
+
+        // Allow sending message with 'Enter' key
+        userInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevents newline character
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
