@@ -3,85 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Annapurna AI - Krishi Sahayok</title>
+    <title>Annapurna Tech - Farmer Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .chat-container { height: 65vh; overflow-y: auto; }
-        .bg-agriculture { background-color: #2d5a27; }
-        .message-user { background-color: #e2f3e5; align-self: flex-end; border-radius: 15px 15px 0 15px; }
-        .message-ai { background-color: #ffffff; align-self: flex-start; border-radius: 15px 15px 15px 0; border: 1px solid #e0e0e0; }
+        /* Custom Green Theme & Smooth Transitions */
+        :root {
+            --primary-green: #2d6a4f;
+            --light-green: #d8f3dc;
+        }
+        body {
+            background-color: #f0fdf4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .input-card {
+            transition: transform 0.2s;
+        }
+        .input-card:hover {
+            transform: translateY(-5px);
+        }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="max-w-md mx-auto mt-5 shadow-2xl rounded-2xl overflow-hidden bg-white">
-        <div class="bg-agriculture p-4 text-white text-center">
-            <h1 class="text-xl font-bold">Annapurna AI 🌾</h1>
-            <p class="text-xs opacity-90">Apnar Unnoto Chaser Sathi</p>
-        </div>
+<body class="p-4 md:p-8">
 
-        <div id="chat-box" class="chat-container p-4 flex flex-col gap-4 bg-gray-50">
-            <div class="message-ai p-3 max-w-[85%] shadow-sm text-sm">
-                Nomoshkar! Ami Annapurna AI. Ami apnake kivabe shahajjo korte pari?
+    <div class="max-w-2xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-green-800 mb-2">🌾 Annapurna Tech</h1>
+            <p class="text-green-600 italic">আপনার খামারের ডিজিটাল সঙ্গী</p>
+        </header>
+
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border-t-8 border-green-600 input-card">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6 flex items-center">
+                <span class="mr-2">📊</span> ফিল্ড ডেটা এন্ট্রি করুন
+            </h2>
+
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Soil Moisture Data (int)</label>
+                    <input type="number" id="soil" placeholder="উদা: 45" 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">NPK Sensors Data</label>
+                    <input type="text" id="npk" placeholder="উদা: 20-10-10" 
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none transition">
+                </div>
+
+                <button onclick="sendData()" id="submitBtn" 
+                    class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 rounded-lg shadow-lg transition-all flex justify-center items-center">
+                    <span id="btnText">ডেটা পাঠান (Submit)</span>
+                    <svg id="loadingSpinner" class="hidden animate-spin ml-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
             </div>
         </div>
 
-        <div class="p-4 bg-white border-t flex items-center gap-2">
-            <input type="text" id="user-input" placeholder="Ekhane likhun..." 
-                class="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
-            <button onclick="sendMessage()" class="bg-green-700 text-white p-2 rounded-full shadow-md hover:bg-green-800">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-            </button>
+        <div class="mt-8 grid grid-cols-2 gap-4">
+            <div class="bg-green-100 p-4 rounded-lg text-center border border-green-200">
+                <p class="text-xs text-green-700 uppercase font-bold">Status</p>
+                <p id="status" class="font-medium text-gray-800 italic">অপেক্ষা করা হচ্ছে...</p>
+            </div>
+            <div class="bg-blue-100 p-4 rounded-lg text-center border border-blue-200">
+                <p class="text-xs text-blue-700 uppercase font-bold">Backend</p>
+                <p class="font-medium text-gray-800">Flask + n8n</p>
+            </div>
         </div>
     </div>
 
     <script>
-        const chatBox = document.getElementById('chat-box');
-        const userInput = document.getElementById('user-input');
+        async function sendData() {
+            const soil = document.getElementById('soil').value;
+            const npk = document.getElementById('npk').value;
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('loadingSpinner');
+            const statusText = document.getElementById('status');
 
-        function appendMessage(sender, text) {
-            const msgDiv = document.createElement('div');
-            msgDiv.className = `p-3 max-w-[85%] shadow-sm ${sender === 'user' ? 'message-user' : 'message-ai'}`;
-            msgDiv.innerHTML = `<p class="text-sm">${text}</p>`;
-            chatBox.appendChild(msgDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
+            // বেসিক ভ্যালিডেশন
+            if (!soil || !npk) {
+                alert("দয়া করে সব বক্স পূরণ করুন!");
+                return;
+            }
 
-        async function sendMessage() {
-            const message = userInput.value.trim();
-            if (!message) return;
+            // UI আপডেট (Loading State)
+            btn.disabled = true;
+            btnText.innerText = "পাঠানো হচ্ছে...";
+            spinner.classList.remove('hidden');
+            statusText.innerText = "ডেটা সার্ভারে যাচ্ছে...";
 
-            appendMessage('user', message);
-            userInput.value = '';
+            // আপনার Render/Flask URL এখানে বসাবেন
+            const RENDER_FLASK_URL = "https://your-flask-app.onrender.com/submit-data";
 
-            const loadingId = "loading-" + Date.now();
-            const loadingDiv = document.createElement('div');
-            loadingDiv.id = loadingId;
-            loadingDiv.className = "message-ai p-3 max-w-[85%] italic text-gray-500 text-xs";
-            loadingDiv.innerText = "Annapurna AI bhabchhe...";
-            chatBox.appendChild(loadingDiv);
+            const payload = {
+                soil_moisture: parseInt(soil),
+                npk_data: npk,
+                timestamp: new Date().toLocaleString('bn-BD')
+            };
 
             try {
-                // Render-e thakle nicher endpoint-i kaaj korbe
-                const response = await fetch('/chat', {
+                const response = await fetch(RENDER_FLASK_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: message })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
                 });
 
-                const data = await response.json();
-                document.getElementById(loadingId).remove();
-                appendMessage('ai', data.reply);
+                const result = await response.json();
 
+                if (response.ok) {
+                    statusText.innerText = "সফলভাবে Google Sheet-এ জমা হয়েছে!";
+                    statusText.classList.add('text-green-700');
+                    alert("সাফল্য! ডেটা পাঠানো হয়েছে।");
+                    // ফর্ম ক্লিয়ার করা
+                    document.getElementById('soil').value = "";
+                    document.getElementById('npk').value = "";
+                } else {
+                    throw new Error("সার্ভার সমস্যা");
+                }
             } catch (error) {
-                if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-                appendMessage('ai', "Server-er sathe jogajog kora jachhe na.");
                 console.error("Error:", error);
+                statusText.innerText = "ব্যর্থ হয়েছে! আবার চেষ্টা করুন।";
+                statusText.classList.add('text-red-600');
+                alert("ডেটা পাঠানো সম্ভব হয়নি। n8n বা Flask চেক করুন।");
+            } finally {
+                // UI রিসেট
+                btn.disabled = false;
+                btnText.innerText = "ডেটা পাঠান (Submit)";
+                spinner.classList.add('hidden');
             }
         }
-
-        userInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
     </script>
 </body>
 </html>
