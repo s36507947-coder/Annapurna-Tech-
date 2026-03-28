@@ -12,27 +12,23 @@
         .message-ai { background-color: #ffffff; align-self: flex-start; border-radius: 15px 15px 15px 0; border: 1px solid #e0e0e0; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
-    <div class="max-w-md mx-auto mt-5 shadow-2xl rounded-2xl overflow-hidden bg-white border border-gray-200">
-        
+<body class="bg-gray-100">
+    <div class="max-w-md mx-auto mt-5 shadow-2xl rounded-2xl overflow-hidden bg-white">
         <div class="bg-agriculture p-4 text-white text-center">
-            <h1 class="text-xl font-bold flex justify-center items-center gap-2">
-                Annapurna AI 🌾
-            </h1>
+            <h1 class="text-xl font-bold">Annapurna AI 🌾</h1>
             <p class="text-xs opacity-90">Apnar Unnoto Chaser Sathi</p>
         </div>
 
         <div id="chat-box" class="chat-container p-4 flex flex-col gap-4 bg-gray-50">
-            <div class="message-ai p-3 max-w-[85%] shadow-sm">
-                <p class="text-sm">Nomoshkar! Ami **Annapurna AI**. Ami apnake sash, mati ba poka-makor niramoy niye kivabe shahajjo korte pari?</p>
+            <div class="message-ai p-3 max-w-[85%] shadow-sm text-sm">
+                Nomoshkar! Ami Annapurna AI. Ami apnake kivabe shahajjo korte pari?
             </div>
         </div>
 
         <div class="p-4 bg-white border-t flex items-center gap-2">
             <input type="text" id="user-input" placeholder="Ekhane likhun..." 
-                class="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600 transition">
-            <button onclick="sendMessage()" 
-                class="bg-green-700 text-white p-2 rounded-full hover:bg-green-800 transition shadow-md">
+                class="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-600">
+            <button onclick="sendMessage()" class="bg-green-700 text-white p-2 rounded-full shadow-md hover:bg-green-800">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
@@ -56,19 +52,18 @@
             const message = userInput.value.trim();
             if (!message) return;
 
-            // Show User Message
             appendMessage('user', message);
             userInput.value = '';
 
-            // Show Loading/Thinking
             const loadingId = "loading-" + Date.now();
             const loadingDiv = document.createElement('div');
             loadingDiv.id = loadingId;
             loadingDiv.className = "message-ai p-3 max-w-[85%] italic text-gray-500 text-xs";
-            loadingDiv.innerText = "Anapurna AI bhabchhe...";
+            loadingDiv.innerText = "Annapurna AI bhabchhe...";
             chatBox.appendChild(loadingDiv);
 
             try {
+                // Render-e thakle nicher endpoint-i kaaj korbe
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -77,24 +72,16 @@
 
                 const data = await response.json();
                 document.getElementById(loadingId).remove();
+                appendMessage('ai', data.reply);
 
-                if (data.reply) {
-                    appendMessage('ai', data.reply);
-                } else {
-                    appendMessage('ai', "Dukkhiro, ami ekhon uttor dite parchi na.");
-                }
             } catch (error) {
-                document.getElementById(loadingId).remove();
+                if (document.getElementById(loadingId)) document.getElementById(loadingId).remove();
                 appendMessage('ai', "Server-er sathe jogajog kora jachhe na.");
+                console.error("Error:", error);
             }
         }
 
-        // Enter key support
-        userInput.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                sendMessage();
-            }
-        });
+        userInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
     </script>
 </body>
 </html>
